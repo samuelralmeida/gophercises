@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -22,6 +23,10 @@ func (s *score) add() {
 }
 
 func main() {
+	var limit int
+	flag.IntVar(&limit, "limit", 30, "limit in seconds to answer the quiz")
+	flag.Parse()
+
 	file, err := os.Open("1_quiz_game/problems.csv")
 	if err != nil {
 		log.Fatal(fmt.Errorf("erro to open file: %w", err))
@@ -47,7 +52,7 @@ func main() {
 
 	go startScore(scoreChan, timerChan, s)
 	go startQuestion(records, scoreChan, questionChan)
-	go startTimer(timerChan, questionChan, 30)
+	go startTimer(timerChan, questionChan, limit)
 
 	<-timerChan
 
@@ -77,6 +82,7 @@ func prompt(record []string) error {
 }
 
 func startQuestion(records [][]string, scoreChan chan int, questionChan chan int) {
+	// wait for timer to start
 	<-questionChan
 	for _, record := range records {
 		err := prompt(record)
@@ -91,7 +97,6 @@ func startScore(scoreChan chan int, timerChan chan int, score *score) {
 	for range scoreChan {
 		score.add()
 	}
-
 	close(timerChan)
 }
 
