@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -24,7 +25,9 @@ func (s *score) add() {
 
 func main() {
 	var limit int
+	var shuffle bool
 	flag.IntVar(&limit, "limit", 30, "limit in seconds to answer the quiz")
+	flag.BoolVar(&shuffle, "shuffle", false, "set true to shuffle questions")
 	flag.Parse()
 
 	file, err := os.Open("1_quiz_game/problems.csv")
@@ -37,6 +40,11 @@ func main() {
 	records, err := reader.ReadAll()
 	if err != nil {
 		log.Fatal(fmt.Errorf("error to read file records: %w", err))
+	}
+
+	if shuffle {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		r.Shuffle(len(records), func(i, j int) { records[i], records[j] = records[j], records[i] })
 	}
 
 	questions := len(records)
